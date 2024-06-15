@@ -1,0 +1,6 @@
+{
+  "listenPort": "8080",
+  "ConnectionString": "postgres:1@tcp(127.0.0.1:5432)/currency",
+  "apiURL": "https://nationalbank.kz/rss/get_rates.cfm",
+  "isProd":true
+}
