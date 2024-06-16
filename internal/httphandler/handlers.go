@@ -1,9 +1,13 @@
 package httphandler
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 type Handler struct {
@@ -36,57 +40,36 @@ func (h *Handler) ResponseWithError(w http.ResponseWriter, status int, errorMsg 
 	h.R.fmt.Println(errorMsg+": ", err)
 }
 
-func (h *Handler) SaveCurrencyHandler(w http.ResponseWriter, r *http.Request, ctx context.Context){
-	var :=mux.Vars(r)
-	date:=vars["date"]
+func (h *Handler) SaveCurrencyHandler(w http.ResponseWriter, r *http.Request, ctx context.Context) {
+	vars := mux.Vars(r)
+	date := vars["date"]
 
-	formattedDate, err:=DateFormat(date)
-	if err!=nil{
+	formattedDate, err := DateFormat(date)
+	if err != nil {
 		h.RespondWithError(w, http.StatusBadRequest, "Failed to parse and format the date", err)
 		return
 	}
-	go h.R.InsertData(*service.GetData(ctx,date,h.Cnfg.APIURL),formattedDate)
+	go h.R.InsertData(*service.GetData(ctx, date, h.Cnfg.APIURL), formattedDate)
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("COntent-Type","application/json")
+	w.Header().Set("COntent-Type", "application/json")
 	w.Write([]byte(`{"success": true}`))
 	h.R.fmt.Println("Success: true")
 }
 
-func (h *Handler) GetCurrencyHandler(w http.ResponseWriter, r *http.Request, ctx context.Context){
-	vars:=mux.Vars(r)
-	date:=vars["date"]
-	code:=vars["code"]
+func (h *Handler) GetCurrencyHandler(w http.ResponseWriter, r *http.Request, ctx context.Context) {
+	vars := mux.Vars(r)
+	date := vars["date"]
+	code := vars["code"]
 
-	formatedDate,err:=DateFormat(date)
-	if err!=nil{
-		h.RespondWithError(w, http.StatusBadRequest, "Failed to parse the date",err)
+	formatedDate, err := DateFormat(date)
+	if err != nil {
+		h.RespondWithError(w, http.StatusBadRequest, "Failed to parse the date", err)
 		return
 	}
 
-	data,err:=h.R.GetData(ctx, formattedDate, code)
-	if err!=nil{
-		h.RespondWithError(w, http.StatusInternalServerError, "Failed to retrieve date",err)
-		return
-	}
-	h.R.fmt.Println("Data was showed")
-	w.Header().Set("Content-type", "application/json")
-	json.NewEncoder(w).Encode(data)
-}
-
-func (h *Handler) DeleteCurrencyHandler(w http.ResponseWriter, r *http.Request, ctx context.Context){
-	vars:=mux.Vars(r)
-	date:=vars["date"]
-	code:=vars["code"]
-
-	formatedDate,err:=DateFormat(date)
-	if err!=nil{
-		h.RespondWithError(w, http.StatusBadRequest, "Failed to parse the date",err)
-		return
-	}
-
-	data,err:=h.R.DeleteData(ctx, formattedDate, code)
-	if err!=nil{
-		h.RespondWithError(w, http.StatusInternalServerError, "Failed to retrieve date",err)
+	data, err := h.R.GetData(ctx, formattedDate, code)
+	if err != nil {
+		h.RespondWithError(w, http.StatusInternalServerError, "Failed to retrieve date", err)
 		return
 	}
 	h.R.fmt.Println("Data was showed")
@@ -94,10 +77,31 @@ func (h *Handler) DeleteCurrencyHandler(w http.ResponseWriter, r *http.Request, 
 	json.NewEncoder(w).Encode(data)
 }
 
-func (h *Handler) StartScheduler(ctx context.Context){
-	date:=time.Now().Format("02.01.2006")
-	formattedDate, err:=DateFormat(date)
-	if err!=nil{
+func (h *Handler) DeleteCurrencyHandler(w http.ResponseWriter, r *http.Request, ctx context.Context) {
+	vars := mux.Vars(r)
+	date := vars["date"]
+	code := vars["code"]
+
+	formatedDate, err := DateFormat(date)
+	if err != nil {
+		h.RespondWithError(w, http.StatusBadRequest, "Failed to parse the date", err)
+		return
+	}
+
+	data, err := h.R.DeleteData(ctx, formattedDate, code)
+	if err != nil {
+		h.RespondWithError(w, http.StatusInternalServerError, "Failed to retrieve date", err)
+		return
+	}
+	h.R.fmt.Println("Data was showed")
+	w.Header().Set("Content-type", "application/json")
+	json.NewEncoder(w).Encode(data)
+}
+
+func (h *Handler) StartScheduler(ctx context.Context) {
+	date := time.Now().Format("02.01.2006")
+	formattedDate, err := DateFormat(date)
+	if err != nil {
 		h.R.fmt.Println("Cannot parse the Data")
 	}
 	h.R.HourTick(date, formattedDate, ctx, h.Cnfg.APIURL)

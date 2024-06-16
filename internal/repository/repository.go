@@ -140,7 +140,7 @@ func (r *Repository) scheduler(ctx context.Context, formattedDate string, rates 
 			r.fmt.Println("Failed to convert float:", err)
 			continue
 		}
-		if count>0{
+		if count > 0{
 			_, err=r.Db.ExecContext(ctx, "UPDATE R_CURRENCY SET TITLE =?, VALUE =?, U_DATE = NOW() WHERE A_DATE=? AND CODE=?",item.Title, value, formattedDate, item.Code)
 			if err!=nil{
 				return err
