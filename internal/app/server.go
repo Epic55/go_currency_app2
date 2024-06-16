@@ -1,6 +1,7 @@
 package app
 
 import (
+	"Epic55/go_currency_app2/internal/initconfig"
 	"context"
 	"fmt"
 	"net/http"
@@ -29,7 +30,7 @@ func init() {
 	var err error
 	Cnfg, err = initconfig.InitConfig("config.json")
 	if err != nil {
-		log.Error("Failed to initialize the config:", err)
+		fmt.Println("Failed to initialize the config:", err)
 		return
 	}
 	Repo = repository.NewRepository(Cnfg.ConnectionString)
@@ -47,7 +48,7 @@ func (a *Application) StartServer() {
 
 	})
 
-	r.HandlerFunc("/currency/{date}/{code}", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/currency/{date}/{code}", func(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithDeadline(r.Context(), time.Now().Add(30*time.Second))
 		defer cancel()
 		Hand.GetCurrencyHandler(w, r.WithContext(ctx), ctx)
@@ -60,13 +61,13 @@ func (a *Application) StartServer() {
 
 	})
 
-	r.HandlerFunc("/delete/{date}/{code}", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/delete/{date}/{code}", func(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithDeadline(r.Context(), time.Now().Add(30*time.Second))
 		defer cancel()
 		Hand.DeleteCurrencyHandler(w, r.WithContext(ctx), ctx)
 	})
 
-	r.HandlerFunc("/delete/{date}", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/delete/{date}", func(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithDeadline(r.Context(), time.Now().Add(30*time.Second))
 		defer cancel()
 		Hand.DeleteCurrencyHandler(w, r.WithContext(ctx), ctx)
@@ -85,13 +86,13 @@ func (a *Application) StartServer() {
 	}
 	quit := make(chan os.Signal, 1)
 	go shutdown(quit)
-	log.Println("Listening on port", Cnfg.ListenPort, "...")
-	log.Fatal(server.ListenAndServe())
+	fmt.Println("Listening on port", Cnfg.ListenPort, "...")
+	fmt.Println(server.ListenAndServe())
 }
 
 func shutdown(quit chan os.Signal) {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	s := <-quit
-	log.Error("caught signal", "signal", s.String())
+	fmt.Println("caught signal", "signal", s.String())
 	os.Exit(0)
 }
