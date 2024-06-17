@@ -1,7 +1,10 @@
 package app
 
 import (
+	"Epic55/go_currency_app2/internal/httphandler"
 	"Epic55/go_currency_app2/internal/initconfig"
+	"Epic55/go_currency_app2/internal/models"
+	"Epic55/go_currency_app2/internal/repository"
 	"context"
 	"fmt"
 	"net/http"
@@ -34,7 +37,7 @@ func init() {
 		return
 	}
 	Repo = repository.NewRepository(Cnfg.ConnectionString)
-	Hand = httpdhandler.NewHandler(Repo, Cnfg)
+	Hand = httphandler.NewHandler(Repo, Cnfg)
 	go Hand.StartScheduler(context.TODO())
 }
 
@@ -74,7 +77,7 @@ func (a *Application) StartServer() {
 	})
 
 	go func() {
-		if err := http.ListenAndServe(":8081", r); err != nil {
+		if err := http.ListenAndServe("localhost:8081", r); err != nil {
 			fmt.Println("Failed to start the metrics server:", err)
 		}
 	}()

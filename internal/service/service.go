@@ -3,6 +3,7 @@ package service
 import (
 	"Epic55/go_currency_app2/internal/models"
 	"context"
+	"encoding/xml"
 	"fmt"
 	"io"
 	"net/http"
@@ -22,19 +23,19 @@ func NewService() *Service {
 	}
 }
 
-func (s *Service) GetData(ctx, _ context.Context, data string, APIURL string) *models.Rates {
-	start := time.Now()
+func (s *Service) GetData(ctx context.Context, data string, APIURL string) *models.Rates {
+	//start := time.Now()
 	apiURL := fmt.Sprintf("%s?fdate=%s", APIURL, data)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, apiURL, nil)
 	if err != nil {
-		s.fmt.Println("Failed to create request with context", err)
+		fmt.Println("Failed to create request with context", err)
 		return nil
 	}
 
 	resp, err := s.Client.Do(req)
 	if err != nil {
-		s.fmt.Println("Failed to GET URL", err)
+		fmt.Println("Failed to GET URL", err)
 		return nil
 	}
 	defer resp.Body.Close()
@@ -43,13 +44,13 @@ func (s *Service) GetData(ctx, _ context.Context, data string, APIURL string) *m
 
 	xmlData, err := io.ReadAll(resp.Body)
 	if err != nil {
-		s.fmt.Println("Failed to Read response Body", err)
+		fmt.Println("Failed to Read response Body", err)
 		return nil
 	}
 
 	var rates *models.Rates
-	if err := xml.Unmarshall(xmlData, &rates); err != nil {
-		s.fmt.Println("Failed to parse XML data", err)
+	if err := xml.Unmarshal(xmlData, &rates); err != nil {
+		fmt.Println("Failed to parse XML data", err)
 		return nil
 	}
 	return rates

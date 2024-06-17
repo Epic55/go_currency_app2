@@ -1,6 +1,9 @@
 package httphandler
 
 import (
+	"Epic55/go_currency_app2/internal/models"
+	"Epic55/go_currency_app2/internal/repository"
+	"Epic55/go_currency_app2/internal/service"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -27,7 +30,7 @@ func NewHandler(repo *repository.Repository, config *models.Config) *Handler {
 }
 
 func DateFormat(date string) (string, error) {
-	parseDate, err := time.Parse("02.01.2006", date)
+	parsedDate, err := time.Parse("02.01.2006", date)
 	if err != nil {
 		return "", err
 	}
@@ -35,9 +38,9 @@ func DateFormat(date string) (string, error) {
 	return formattedDate, nil
 }
 
-func (h *Handler) ResponseWithError(w http.ResponseWriter, status int, errorMsg string, err error) {
+func (h *Handler) RespondWithError(w http.ResponseWriter, status int, errorMsg string, err error) {
 	http.Error(w, errorMsg, status)
-	h.R.fmt.Println(errorMsg+": ", err)
+	fmt.Println(errorMsg+": ", err)
 }
 
 func (h *Handler) SaveCurrencyHandler(w http.ResponseWriter, r *http.Request, ctx context.Context) {
@@ -49,11 +52,14 @@ func (h *Handler) SaveCurrencyHandler(w http.ResponseWriter, r *http.Request, ct
 		h.RespondWithError(w, http.StatusBadRequest, "Failed to parse and format the date", err)
 		return
 	}
+	var service = service.NewService()
+
 	go h.R.InsertData(*service.GetData(ctx, date, h.Cnfg.APIURL), formattedDate)
+
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("COntent-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(`{"success": true}`))
-	h.R.fmt.Println("Success: true")
+	fmt.Println("Success: true")
 }
 
 func (h *Handler) GetCurrencyHandler(w http.ResponseWriter, r *http.Request, ctx context.Context) {
@@ -61,7 +67,7 @@ func (h *Handler) GetCurrencyHandler(w http.ResponseWriter, r *http.Request, ctx
 	date := vars["date"]
 	code := vars["code"]
 
-	formatedDate, err := DateFormat(date)
+	formattedDate, err := DateFormat(date)
 	if err != nil {
 		h.RespondWithError(w, http.StatusBadRequest, "Failed to parse the date", err)
 		return
@@ -69,10 +75,10 @@ func (h *Handler) GetCurrencyHandler(w http.ResponseWriter, r *http.Request, ctx
 
 	data, err := h.R.GetData(ctx, formattedDate, code)
 	if err != nil {
-		h.RespondWithError(w, http.StatusInternalServerError, "Failed to retrieve date", err)
+		h.RespondWithError(w, http.StatusInternalServerError, "Failed to retrieve date 1", err)
 		return
 	}
-	h.R.fmt.Println("Data was showed")
+	fmt.Println("Data was showed")
 	w.Header().Set("Content-type", "application/json")
 	json.NewEncoder(w).Encode(data)
 }
@@ -82,7 +88,7 @@ func (h *Handler) DeleteCurrencyHandler(w http.ResponseWriter, r *http.Request, 
 	date := vars["date"]
 	code := vars["code"]
 
-	formatedDate, err := DateFormat(date)
+	formattedDate, err := DateFormat(date)
 	if err != nil {
 		h.RespondWithError(w, http.StatusBadRequest, "Failed to parse the date", err)
 		return
@@ -90,10 +96,10 @@ func (h *Handler) DeleteCurrencyHandler(w http.ResponseWriter, r *http.Request, 
 
 	data, err := h.R.DeleteData(ctx, formattedDate, code)
 	if err != nil {
-		h.RespondWithError(w, http.StatusInternalServerError, "Failed to retrieve date", err)
+		h.RespondWithError(w, http.StatusInternalServerError, "Failed to retrieve date 2", err)
 		return
 	}
-	h.R.fmt.Println("Data was showed")
+	fmt.Println("Data was showed")
 	w.Header().Set("Content-type", "application/json")
 	json.NewEncoder(w).Encode(data)
 }
@@ -102,7 +108,7 @@ func (h *Handler) StartScheduler(ctx context.Context) {
 	date := time.Now().Format("02.01.2006")
 	formattedDate, err := DateFormat(date)
 	if err != nil {
-		h.R.fmt.Println("Cannot parse the Data")
+		fmt.Println("Cannot parse the Data")
 	}
 	h.R.HourTick(date, formattedDate, ctx, h.Cnfg.APIURL)
 }
