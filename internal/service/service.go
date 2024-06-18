@@ -23,7 +23,7 @@ func NewService() *Service {
 	}
 }
 
-func (s *Service) GetData(ctx context.Context, data string, APIURL string) *models.Rates {
+func (s *Service) GetData1(ctx context.Context, data string, APIURL string) *models.Rates {
 	//start := time.Now()
 	apiURL := fmt.Sprintf("%s?fdate=%s", APIURL, data)
 

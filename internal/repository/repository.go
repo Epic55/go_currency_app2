@@ -82,10 +82,10 @@ func (r *Repository) GetData(ctx context.Context, formattedDate, code string) ([
 	var params []interface{}
 
 	if code == "" {
-		query = "SELECT ID, TITLE, CODE, VALUE, A_DATE FROM R_CURRENCY WHERE A_DATE = ?"
+		query = `SELECT ID, TITLE, CODE, VALUE, A_DATE FROM R_CURRENCY WHERE A_DATE = $1`
 		params = []interface{}{formattedDate}
 	} else {
-		query = "SELECT ID, TITLE, CODE, VALUE, A_DATE FROM R_CURRENCY WHERE A_DATE = ? AND CODE = ?"
+		query = `SELECT ID, TITLE, CODE, VALUE, A_DATE FROM R_CURRENCY WHERE A_DATE = $1 AND CODE = $2`
 		params = []interface{}{formattedDate, code}
 	}
 
@@ -96,12 +96,6 @@ func (r *Repository) GetData(ctx context.Context, formattedDate, code string) ([
 		return nil, err
 	}
 	defer rows.Close()
-
-	// duration := time.Since(startTime).Seconds()
-	// if code == "" {
-	// 	go r.Metrics.ObserveSelectDuration("select", "success", duration)
-	// 	go r.Metrics.IncSelectCount("select", "success")
-	// }
 
 	var results []models.DBItem
 	for rows.Next() {
@@ -124,10 +118,10 @@ func (r *Repository) DeleteData(ctx context.Context, formattedDate, code string)
 	var params []interface{}
 
 	if code == "" {
-		query = "DELETE FROM R_CURRENCY WHERE A_DATE = ?"
+		query = `DELETE FROM R_CURRENCY WHERE A_DATE = $1`
 		params = []interface{}{formattedDate}
 	} else {
-		query = "DELETE FROM R_CURRENCY WHERE A_DATE = ? AND CODE = ?"
+		query = `DELETE FROM R_CURRENCY WHERE A_DATE = $1 AND CODE = $2`
 		params = []interface{}{formattedDate, code}
 	}
 
@@ -152,7 +146,7 @@ func (r *Repository) DeleteData(ctx context.Context, formattedDate, code string)
 
 func (r *Repository) scheduler(ctx context.Context, formattedDate string, rates models.Rates) error {
 	var count int
-	err := r.Db.QueryRowContext(ctx, "SELECT COUNT(*) FROM R_CURRENCY WHERE A_DATE = ?", formattedDate).Scan(&count)
+	err := r.Db.QueryRowContext(ctx, `SELECT COUNT(*) FROM R_CURRENCY WHERE A_DATE = $1`, formattedDate).Scan(&count)
 	if err != nil {
 		return err
 	}
@@ -164,12 +158,12 @@ func (r *Repository) scheduler(ctx context.Context, formattedDate string, rates 
 			continue
 		}
 		if count > 0 {
-			_, err = r.Db.ExecContext(ctx, "UPDATE R_CURRENCY SET TITLE = ?, VALUE = ?, U_DATE = NOW() WHERE A_DATE = ? AND CODE = ?", item.Title, value, formattedDate, item.Code)
+			_, err = r.Db.ExecContext(ctx, `UPDATE R_CURRENCY SET TITLE = $1, VALUE = $2, A_DATE = NOW() WHERE A_DATE = $3 AND CODE = $4`, item.Title, value, formattedDate, item.Code)
 			if err != nil {
 				return err
 			}
 		} else {
-			_, err = r.Db.ExecContext(ctx, "INSERT INTO R_CURRENCY (TITLE, CODE, VALUE, A_DATE) VALUES (?, ?, ?, ?)", item.Title, item.Code, value, formattedDate)
+			_, err = r.Db.ExecContext(ctx, `INSERT INTO R_CURRENCY (TITLE, CODE, VALUE, A_DATE) VALUES ($1, $2, $3, $4)`, item.Title, item.Code, value, formattedDate)
 			if err != nil {
 				return err
 			}
@@ -186,7 +180,7 @@ func (r *Repository) HourTick(date, formattedDate string, ctx context.Context, A
 	ticker := time.NewTicker(time.Minute)
 
 	for range ticker.C {
-		err := r.scheduler(ctx, formattedDate, *service.GetData(ctx, date, APIURL))
+		err := r.scheduler(ctx, formattedDate, *service.GetData1(ctx, date, APIURL))
 		if err != nil {
 			fmt.Println("Can't update the date:", err)
 		}

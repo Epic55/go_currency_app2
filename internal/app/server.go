@@ -76,13 +76,13 @@ func (a *Application) StartServer() {
 		Hand.DeleteCurrencyHandler(w, r.WithContext(ctx), ctx)
 	})
 
-	go func() {
-		if err := http.ListenAndServe("localhost:8081", r); err != nil {
-			fmt.Println("Failed to start the metrics server:", err)
-		}
-	}()
+	// go func() {
+	// 	if err := http.ListenAndServe("localhost:8081", r); err != nil {
+	// 		fmt.Println("Failed to start the metrics server:", err)
+	// 	}
+	// }()
 	server := &http.Server{
-		Addr:         ":" + Cnfg.ListenPort,
+		Addr:         "localhost:" + Cnfg.ListenPort,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		Handler:      r,

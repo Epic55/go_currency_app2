@@ -54,7 +54,7 @@ func (h *Handler) SaveCurrencyHandler(w http.ResponseWriter, r *http.Request, ct
 	}
 	var service = service.NewService()
 
-	go h.R.InsertData(*service.GetData(ctx, date, h.Cnfg.APIURL), formattedDate)
+	go h.R.InsertData(*service.GetData1(ctx, date, h.Cnfg.APIURL), formattedDate)
 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
@@ -99,7 +99,7 @@ func (h *Handler) DeleteCurrencyHandler(w http.ResponseWriter, r *http.Request, 
 		h.RespondWithError(w, http.StatusInternalServerError, "Failed to retrieve date 2", err)
 		return
 	}
-	fmt.Println("Data was showed")
+	fmt.Println("Data was removed")
 	w.Header().Set("Content-type", "application/json")
 	json.NewEncoder(w).Encode(data)
 }
